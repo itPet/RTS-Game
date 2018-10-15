@@ -19,30 +19,60 @@ public class BuildSiteController : MonoBehaviour {
     }
 
     //################ UPDATE METHODS ################
+    //If enemies are on site, move all troops to the middle and then back again.
+    private void Update() {
+        string troopTag = "Empty";
+        foreach (Transform pos in GetSpawnPositions()) { //Loop through all spawn positions
+            if (pos.childCount == 2) { //If different troops
+                MoveTroops(transform); //Move all to center
+            } else if (pos.childCount == 1) {
+                if (troopTag != "Empty" && troopTag != pos.GetChild(0).tag) {
+                    MoveTroops(transform);
+                } else {
+                    troopTag = pos.GetChild(0).tag;
+                }
+
+            }
+
+        }
+    }
 
     //################ HELPER METHODS 1 ################
 
     //################ PUBLIC METHODS ################
     public bool TroopsOnSite() {
         foreach (Transform pos in GetSpawnPositions()) {
-            if (pos.childCount == 1) {
-                return true;
+            if (pos.childCount > 0) {
+                if (pos.GetChild(0).tag == "Troop")
+                    return true;
             }
         }
         return false;
     }
 
-    public void ActivateTower(GameObject tower) {
-        tower.GetComponent<TowerController>().Activate(GetSpawnPositions()); //Activate tower
-        tower.GetComponent<SpriteRenderer>().color = Color.white; //Set tower opaciy to 100%
-        tower.layer = 2; //Set layer to Ignore Raycast
+    public List<Transform> PaymentTroops() {
+        List<Transform> troops = new List<Transform>();
+        foreach (Transform pos in GetSpawnPositions()) {
+            if (pos.childCount > 0 && pos.GetChild(0).tag == "Troop") {
+                troops.Add(pos.GetChild(0));
+                if (troops.Count > 5) {
+                    return troops;
+                }
+            }
+        }
+        return troops;
     }
+
+    //public void ActivateTower(GameObject tower) {
+    //    tower.GetComponent<TowerController>().Activate(GetSpawnPositions()); //Activate tower
+    //    tower.GetComponent<SpriteRenderer>().color = Color.white; //Set tower opaciy to 100%
+    //    tower.layer = 2; //Set layer to Ignore Raycast
+    //}
 
     public void MoveTroops(Transform destination) {
         foreach (Transform pos in GetSpawnPositions()) {
             if (pos.childCount > 0) { //If pos has troop
                 for (int i = 0; i < pos.childCount; i++) {
-                    print(i);
                     pos.GetChild(i).GetComponent<TroopController>().Target = destination.position; //Set new destination for troop
                     pos.GetChild(i).GetComponent<TroopController>().HomeBuildSite = destination; //Set homeBuildSite
                     pos.GetChild(i).transform.localScale = Vector2.one; //Make big

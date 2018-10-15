@@ -3056,6 +3056,48 @@ Prefab:
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 43b449b62735c41e39dcd17a9bea6a77, type: 2}
   m_IsPrefabAsset: 0
+--- !u!1001 &500747767
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1382197206}
+    m_Modifications:
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4457150266506836, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6b3413dc974f94e3a962acda95e11bae, type: 2}
+  m_IsPrefabAsset: 0
 --- !u!4 &504642211 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4722819012192458, guid: faf4dd2cd560c473e9c4d433e8d90886,
@@ -9220,6 +9262,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tower: {fileID: 1316334168447726, guid: 672ade99d52ab4aafaa21c0d33fd99ed, type: 2}
   line: {fileID: 1746126927677288, guid: 42dee60999d0d4f3e82979a47805d6eb, type: 2}
+  towerPicture: {fileID: 1843274719356968, guid: aec08d3ad6b20482e9dfb4cc82a8f898,
+    type: 2}
 --- !u!1001 &1469320744
 Prefab:
   m_ObjectHideFlags: 0

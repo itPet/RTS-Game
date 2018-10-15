@@ -17,6 +17,10 @@ public class TowerController : MonoBehaviour {
         Assert.IsNotNull(troop);
     }
 
+    private void Start() {
+        StartCoroutine(SpawnTroops(transform.parent.GetComponent<BuildSiteController>().GetSpawnPositions()));
+    }
+
 
     // ################ UDATE METHODS ################
     private void Update() {
@@ -51,7 +55,7 @@ public class TowerController : MonoBehaviour {
 
 
     // ################ PUBLIC METHODS ################
-    public void Activate(List<Transform> positions) {
-        StartCoroutine(SpawnTroops(positions));
-    }
+    //public void Activate(List<Transform> positions) {
+    //    StartCoroutine(SpawnTroops(positions));
+    //}
 }
