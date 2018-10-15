@@ -9,6 +9,7 @@ TagManager:
   - SpawnPosition
   - Troop
   - Enemy
+  - EnemyTower
   layers:
   - Default
   - TransparentFX

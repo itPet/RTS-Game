@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour {
                     BuildSiteController clickedSite = MouseHit().transform
                                               .GetComponent<BuildSiteController>();
                     if (clickedSite != potentialMove)
-                        MoveSuccess(clickedSite.transform.position);
+                        MoveSuccess(clickedSite.transform);
                     else
                         MoveFailed();
                 }
@@ -57,13 +57,14 @@ public class GameManager : MonoBehaviour {
                 else
                     PendingTowerFail();
             }
+        }
 
         //---- PENDING AND MOUSE UP ----
-        } else if ((potentialMove || pendingTower) && Input.GetMouseButtonUp(0)) {
+        else if ((potentialMove || pendingTower) && Input.GetMouseButtonUp(0)) {
             Transform upedObject = MouseHit().transform;
             if (potentialMove) {
                 if (MouseUpOn("BuildSite") && upedObject != potentialMove.transform) //If upedObject != potentialMove
-                    MoveSuccess(MouseHit().transform.position);
+                    MoveSuccess(MouseHit().transform);
                 else if (MouseUpOnNothing() || upedObject != potentialMove.transform)
                     MoveFailed();
             }
@@ -74,9 +75,10 @@ public class GameManager : MonoBehaviour {
                 else if (MouseUpOnNothing() || ParentSiteCtrl(upedObject) != pendingTower)
                     PendingTowerFail();
             }
+        }
 
-        //---- BUILD SITE CLICKED ----
-        } else if (MouseDownOn("BuildSite")) {
+        //---- BUILD SITE CLICKED ---- 
+        else if (MouseDownOn("BuildSite")) {
             BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
             if (clickedSite.TroopsOnSite()) { //If troops on site, 
                 PotentialMoveFrom(clickedSite);
@@ -112,7 +114,7 @@ public class GameManager : MonoBehaviour {
     void CreateTower(Transform onSite) {
         newTower = Instantiate(tower); 
         newTower.transform.SetParent(onSite); //Set tower parent
-        newTower.transform.position = onSite.position + new Vector3(-0.5f, 0.8f, 0); //Set tower position
+        newTower.transform.position = onSite.position; //Set tower position
         newTower.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0.5f); //Set opacity to 50%
     }
 
@@ -143,7 +145,7 @@ public class GameManager : MonoBehaviour {
         Destroy(newTower);
     }
 
-    void MoveSuccess(Vector2 destination) {
+    void MoveSuccess(Transform destination) {
         potentialMove.MoveTroops(destination);
         potentialMove.GetComponent<SpriteRenderer>().enabled = false;
         potentialMove = null;

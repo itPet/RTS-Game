@@ -38,11 +38,16 @@ public class BuildSiteController : MonoBehaviour {
         tower.layer = 2; //Set layer to Ignore Raycast
     }
 
-    public void MoveTroops(Vector2 destination) {
+    public void MoveTroops(Transform destination) {
         foreach (Transform pos in GetSpawnPositions()) {
-            if (pos.childCount == 1) {
-                pos.GetChild(0).GetComponent<TroopController>().Target = destination;
-                //pos.DetachChildren();
+            if (pos.childCount > 0) { //If pos has troop
+                for (int i = 0; i < pos.childCount; i++) {
+                    print(i);
+                    pos.GetChild(i).GetComponent<TroopController>().Target = destination.position; //Set new destination for troop
+                    pos.GetChild(i).GetComponent<TroopController>().HomeBuildSite = destination; //Set homeBuildSite
+                    pos.GetChild(i).transform.localScale = Vector2.one; //Make big
+                }
+                pos.DetachChildren();
             }
         }
     }

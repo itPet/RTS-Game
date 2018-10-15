@@ -10,6 +10,7 @@ public class TowerController : MonoBehaviour {
 
     GameObject newTroop;
 
+    public int health = 10;
 
     // ################ STARTER METHODS ################
     void Awake() {
@@ -18,6 +19,14 @@ public class TowerController : MonoBehaviour {
 
 
     // ################ UDATE METHODS ################
+    private void Update() {
+        if (health < 1) {
+            transform.parent.GetComponent<BuildSiteController>().status = BuildSiteController.TowerStatus.Empty;
+            Destroy(gameObject);
+
+        }
+    }
+
     IEnumerator SpawnTroops(List<Transform> positions) {
         while (true) {
             yield return new WaitForSeconds(spawnDelay);

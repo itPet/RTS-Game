@@ -23,7 +23,7 @@ GameObject:
   - component: {fileID: 61330153240138810}
   - component: {fileID: 114244268789808904}
   m_Layer: 0
-  m_Name: KnightTower
+  m_Name: Tower
   m_TagString: Tower
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,7 +79,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   troop: {fileID: 1064450704805472, guid: bc47c7438394244bf80fb6ac183367d6, type: 2}
-  spawnDelay: 1.3
+  spawnDelay: 10.3
+  health: 10
 --- !u!212 &212969980285587104
 SpriteRenderer:
   m_ObjectHideFlags: 1

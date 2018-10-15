@@ -11,80 +11,95 @@ public class TroopController : MonoBehaviour {
     [SerializeField] float SiteEnterExitWaitTime;
 
     float distanceToTarget = 0.1f;
-    bool canEnterAndExit = true;
     bool canStartStuckCheck = true;
     bool move = true;
+    bool dead = false;
     int walkHash = Animator.StringToHash("Walk");
     int attackHash = Animator.StringToHash("Attack");
     int idleHash = Animator.StringToHash("Idle");
     int dieHash = Animator.StringToHash("Die");
 
     TroopController enemy;
+    TowerController enemyTower;
     string enemyTag;
+    string enemyTowerTag;
+    Transform homeBuildSite;
     Vector2 target;
     Vector2 oldTarget;
     Animator anim;
+    Vector2 atkPos;
 
     public int health = 3;
     public TroopStatus status = TroopStatus.Nothing;
     public enum TroopStatus {
         Nothing,
         Walk,
-        Arrived
+        Idle,
+        Attack
     }
 
     //################ STARTER METHODS ################
     void Start() { //Set variables
-        target = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+        target = transform.parent == null ? transform.position : transform.parent.position;
         enemyTag = tag == "Enemy" ? "Troop" : "Enemy"; //If you are an enemy, your enemy is Troop.
+        enemyTowerTag = tag == "Enemy" ? "Tower" : "EnemyTower";
         anim = GetComponent<Animator>();
     }
 
 
     //################ UPDATE METHODS ################
     private void Update() {
-        transform.rotation = Quaternion.Euler(Vector3.zero); //Always don't rotate
-        if (health < 1)
-            Die();
+        if (!dead) {
+            transform.rotation = Quaternion.Euler(Vector3.zero); //Always don't rotate
+            if (health < 1)
+                Die();
+        }
+
     }
 
     private void FixedUpdate() {
-        MoveToTarget();
+        if (!dead) {
+            MoveToTarget();
 
-        if (Vector2.Distance(transform.position, target) < distanceToTarget) { //If close to target
-            if (enemy && status != TroopStatus.Arrived) {
-                print(enemy.tag);
-                status = TroopStatus.Arrived;
-                StartCoroutine(Attack());
-            } else if (status != TroopStatus.Arrived) {
-                status = TroopStatus.Arrived;
-                BeginIdle();
+            if (status == TroopStatus.Attack) {
+                transform.position = atkPos;
             }
-        } else { //If far from target
-            if (status != TroopStatus.Walk)
-                BeginWalk();
+
+            if (Vector2.Distance(transform.position, target) < distanceToTarget) { //If close to target
+                if (status != TroopStatus.Idle && status != TroopStatus.Attack) {
+                    if (transform.parent == null && homeBuildSite != null) {
+                        ReachedBuildSite();
+                    }
+
+                    BeginIdle();
+                }
+            } else { //If far from target and not attack
+                if (status != TroopStatus.Walk && status != TroopStatus.Attack)
+                    BeginWalk();
+            }
         }
     }
 
     //---- TRIGGER METHODS ----
-    private void OnCollisionEnter2D(Collision2D collision) {
-        if (enemy == null && collision.transform.tag == enemyTag) {
-            print("collided with enemy");
-            SetEnemyTarget(collision);
+    private void OnCollisionStay2D(Collision2D collision) { //Collided with Enemy
+        if (status != TroopStatus.Attack && collision.transform.tag == enemyTag) {
+            enemy = collision.transform.GetComponent<TroopController>(); //Set enemy
+            StartCoroutine(Attack());
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision) {
-        if (collision.transform.tag == "BuildSite" && canEnterAndExit) {
-            StartCoroutine(EnteredBuildSite(collision.GetComponent<BuildSiteController>()));
-        } 
-    }
-
-    private void OnTriggerExit2D(Collider2D collision) {
-        if (collision.transform.tag == "BuildSite" && canEnterAndExit) {
-            StartCoroutine(ExitBuildSite());
+    private void OnTriggerStay2D(Collider2D collision) {
+        if (status != TroopStatus.Attack && collision.transform.tag == enemyTowerTag) {
+            enemyTower = collision.transform.GetComponent<TowerController>(); //Set enemy tower
+            StartCoroutine(Attack());
         }
     }
+
+    //private void OnTriggerEnter2D(Collider2D collision) { //Enter BuildSite
+    //    if (collision.transform.tag == "BuildSite" && collision.transform == homeBuildSite) {
+    //        ReachedBuildSite(collision.GetComponent<BuildSiteController>());
+    //    } 
+    //}
 
 
     //################ HELPER METHODS 1 ################
@@ -96,10 +111,14 @@ public class TroopController : MonoBehaviour {
     }
 
     void Die() {
+        print(tag + " died");
+
+        dead = true;
+        EndAttack();
         anim.Play(dieHash);
         GetComponent<BoxCollider2D>().enabled = false;
-        move = false;
-        Destroy(gameObject, 2);
+        GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+        Destroy(gameObject, 4);
     }
 
     void BeginWalk() {
@@ -110,75 +129,64 @@ public class TroopController : MonoBehaviour {
     }
 
     void BeginIdle() {
+        status = TroopStatus.Idle;
         anim.Play(idleHash);
     }
 
     IEnumerator Attack() {
-        print("Attack");
-        anim.Play("Attack");
-        GetComponent<SpriteRenderer>().flipX = enemy.transform.position.x < transform.position.x ? true : false; //Sprite looks left or right
-        while (enemy && status == TroopStatus.Arrived) {
-            yield return new WaitForSeconds(1);
-            enemy.health--;
+        move = false;
+        status = TroopStatus.Attack;
+        atkPos = transform.position;
+        anim.Play(attackHash);
+        if (enemy != null) {
+            while (enemy.health > 0 && status == TroopStatus.Attack && enemy) {
+                enemy.health--;
+                yield return new WaitForSeconds(1);
+            }
         }
+
+        if (enemyTower != null) {
+            while (enemyTower.health > 0 && status == TroopStatus.Attack && enemyTower) {
+                enemyTower.health--;
+                yield return new WaitForSeconds(1);
+            }
+        }
+
         EndAttack();
     }
 
-    void SetEnemyTarget(Collision2D collision) {
-        print("Set enemy target");
-        enemy = collision.transform.GetComponent<TroopController>();
-        oldTarget = target;
-        Transform atkPos = GetNearestAtkPosFrom(enemy.transform);
-        atkPos.GetComponent<SpriteRenderer>().color = Color.red;
-        target = atkPos.position;
-    }
+    //void SetEnemyTarget(Collision2D collision) {
+    //    enemy = collision.transform.GetComponent<TroopController>();
+    //    oldTarget = target;
+    //    Transform atkPos = GetNearestAtkPosFrom(enemy.transform);
+    //    atkPos.GetComponent<SpriteRenderer>().color = Color.red;
+    //    target = atkPos.position;
+    //}
 
     void EndAttack() {
-        print("EndAttack");
         status = TroopStatus.Nothing;
-        target = oldTarget;
+        move = true;
     }
 
-    IEnumerator EnteredBuildSite(BuildSiteController site) {
-        canEnterAndExit = false;
+    void ReachedBuildSite() {
         transform.localScale = new Vector2(0.7f, 0.7f); //Make small
-        if (transform.parent == null) { //If no parent
-            foreach (Transform pos in site.GetSpawnPositions()) {
-                if (pos.childCount == 0) { //If empty pos
-                    transform.SetParent(pos); //Set parent
-                    target = pos.position; //Set target
-                }
+        foreach (Transform pos in homeBuildSite.GetComponent<BuildSiteController>().GetSpawnPositions()) {
+            if (pos.childCount == 0 || (pos.GetChild(0).tag == enemyTag && pos.childCount < 2)) {
+                transform.SetParent(pos); //Set parent
+                target = pos.position; //Set target
             }
         }
+        
         if (transform.parent == null) { //If no empty pos was found
             Destroy(gameObject); 
         }
-        yield return new WaitForSeconds(SiteEnterExitWaitTime);
-        canEnterAndExit = true;
     }
 
-    IEnumerator ExitBuildSite() {
-        canEnterAndExit = false;
-        transform.localScale = Vector2.one; //Make big
-        transform.parent = null; //Detatch from parent
-        yield return new WaitForSeconds(SiteEnterExitWaitTime);
-        canEnterAndExit = true;
-    }
 
 
     //################ HELPER METHODS 2 ################
-    Transform GetNearestAtkPosFrom(Transform otherTroop) {
-        Transform[] atkPositions = otherTroop.GetComponentsInChildren<Transform>();
-        Transform nearestPos = atkPositions[0];
-        Vector2 troopPos = transform.position;
-        foreach (Transform pos in atkPositions) {
-            if (Vector2.Distance(troopPos, pos.position) < Vector2.Distance(troopPos, nearestPos.position)) //If distance to pos < distance to nearestPos
-                nearestPos = pos;
-        }
-        return nearestPos;
-    }
-
     IEnumerator StuckCheck() {
+        print(tag + " StuckCheck");
         canStartStuckCheck = false;
         while (status == TroopStatus.Walk) {
             float toSlow = MaxDistance(durationToGhost) * portionOfSpeedToGhost; //Set "speed" that is to slow
@@ -200,6 +208,7 @@ public class TroopController : MonoBehaviour {
     }
 
     IEnumerator BecomeGhost() {
+        print(tag + " became ghost");
         GetComponent<BoxCollider2D>().isTrigger = true;
         yield return new WaitForSeconds(ghostDuration);
         GetComponent<BoxCollider2D>().isTrigger = false;
@@ -209,5 +218,9 @@ public class TroopController : MonoBehaviour {
     //################ PUBLIC METHODS ################
     public Vector2 Target {
         set { target = value; }
+    }
+
+    public Transform HomeBuildSite {
+        set { homeBuildSite = value; }
     }
 }
