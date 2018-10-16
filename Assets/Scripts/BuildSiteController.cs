@@ -15,7 +15,8 @@ public class BuildSiteController : MonoBehaviour {
 
     //################ STARTER METHODS ################
     private void Start() {
-        status = TowerStatus.Empty;
+        status = transform.Find("Castle") || transform.Find("EnemyCastle") ? TowerStatus.Full : TowerStatus.Empty; //If castle, site is full
+
     }
 
     //################ UPDATE METHODS ################

@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour {
     [SerializeField] GameObject tower;
     [SerializeField] GameObject line;
     [SerializeField] GameObject towerPicture;
+    [SerializeField] GameObject menu;
 
     GameObject newLine;
     GameObject newTower;
@@ -17,6 +18,8 @@ public class GameManager : MonoBehaviour {
 
     BuildSiteController potentialMove;
     BuildSiteController pendingTower;
+
+    bool gameOver = false;
 
     // ################ STARTER METHODS ################
     void Awake() {
@@ -31,6 +34,7 @@ public class GameManager : MonoBehaviour {
         Assert.IsNotNull(tower);
         Assert.IsNotNull(line);
         Assert.IsNotNull(towerPicture);
+        Assert.IsNotNull(menu);
     }
 
     void Start() {
@@ -39,72 +43,81 @@ public class GameManager : MonoBehaviour {
 
     // ################ UPDATE METHODS ################
     void Update() {
-        //---- PENDING AND MOUSE DOWN ----
-        if ((potentialMove || pendingTower) && Input.GetMouseButtonDown(0)) {
-            Transform clickedObject = MouseHit().transform;
-            if (potentialMove) {
-                if (MouseDownOn("BuildSite")) {
-                    // Get controller
-                    BuildSiteController clickedSite = MouseHit().transform
-                                              .GetComponent<BuildSiteController>();
-                    if (clickedSite != potentialMove)
-                        MoveSuccess(clickedSite.transform);
+        if (!gameOver) {
+            //---- PENDING AND MOUSE DOWN ----
+            if ((potentialMove || pendingTower) && Input.GetMouseButtonDown(0)) {
+                Transform clickedObject = MouseHit().transform;
+                if (potentialMove) {
+                    if (MouseDownOn("BuildSite")) {
+                        // Get controller
+                        BuildSiteController clickedSite = MouseHit().transform
+                                                  .GetComponent<BuildSiteController>();
+                        if (clickedSite != potentialMove)
+                            MoveSuccess(clickedSite.transform);
+                        else
+                            MoveFailed();
+                    }
+                }
+
+                if (pendingTower) {
+                    if (MouseDownOn("Tower") && ParentSiteCtrl(clickedObject) == pendingTower)
+                        PendingTowerSuccess();
                     else
+                        PendingTowerFail();
+                }
+            }
+
+            //---- PENDING AND MOUSE UP ----
+            else if ((potentialMove || pendingTower) && Input.GetMouseButtonUp(0)) {
+                Transform upedObject = MouseHit().transform;
+                if (potentialMove) {
+                    if (MouseUpOn("BuildSite") && upedObject != potentialMove.transform) //If upedObject != potentialMove
+                        MoveSuccess(MouseHit().transform);
+                    else if (MouseUpOnNothing() || upedObject != potentialMove.transform)
                         MoveFailed();
                 }
-            }
 
-            if (pendingTower) {
-                if (MouseDownOn("Tower") && ParentSiteCtrl(clickedObject) == pendingTower)
-                    PendingTowerSuccess();
-                else
-                    PendingTowerFail();
-            }
-        }
-
-        //---- PENDING AND MOUSE UP ----
-        else if ((potentialMove || pendingTower) && Input.GetMouseButtonUp(0)) {
-            Transform upedObject = MouseHit().transform;
-            if (potentialMove) {
-                if (MouseUpOn("BuildSite") && upedObject != potentialMove.transform) //If upedObject != potentialMove
-                    MoveSuccess(MouseHit().transform);
-                else if (MouseUpOnNothing() || upedObject != potentialMove.transform)
-                    MoveFailed();
-            }
-
-            if (pendingTower) {
-                if (MouseUpOn("Tower") && ParentSiteCtrl(upedObject) == pendingTower)
-                    PendingTowerSuccess();
-                else if (MouseUpOnNothing() || ParentSiteCtrl(upedObject) != pendingTower)
-                    PendingTowerFail();
-            }
-        }
-
-        //---- BUILD SITE CLICKED ---- 
-        else if (MouseDownOn("BuildSite")) {
-            BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
-            if (clickedSite.TroopsOnSite()) { //If friendly troops on site
-                PotentialMoveFrom(clickedSite);
-            }
-
-            if (clickedSite.status == BuildSiteController.TowerStatus.Empty) { //If site empty
-                if (clickedSite.PaymentTroops().Count > 5) { //If site has at least 6 friendly troops
-                    PendingTowerAt(clickedSite);
+                if (pendingTower) {
+                    if (MouseUpOn("Tower") && ParentSiteCtrl(upedObject) == pendingTower)
+                        PendingTowerSuccess();
+                    else if (MouseUpOnNothing() || ParentSiteCtrl(upedObject) != pendingTower)
+                        PendingTowerFail();
                 }
             }
-        }
 
-        //---- LINE ----
-        if (Input.GetMouseButtonUp(0)) { //if line, destroy
-            if (newLine != null)
-                Destroy(newLine);
-        }
+            //---- BUILD SITE CLICKED ---- 
+            else if (MouseDownOn("BuildSite")) {
+                BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
+                if (clickedSite.TroopsOnSite()) { //If friendly troops on site
+                    PotentialMoveFrom(clickedSite);
+                }
 
-        //---- DRAG ----
-        if (Input.GetMouseButton(0) && newLine) { //line follow mouse
-            Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            newLine.GetComponent<LineRenderer>().SetPosition(1, pos);
+                if (clickedSite.status == BuildSiteController.TowerStatus.Empty) { //If site empty
+                    if (clickedSite.PaymentTroops().Count > 5) { //If site has at least 6 friendly troops
+                        PendingTowerAt(clickedSite);
+                    }
+                }
+            }
+
+            //---- LINE ----
+            if (Input.GetMouseButtonUp(0)) { //if line, destroy
+                if (newLine != null)
+                    Destroy(newLine);
+            }
+
+            //---- DRAG ----
+            if (Input.GetMouseButton(0) && newLine) { //line follow mouse
+                Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                newLine.GetComponent<LineRenderer>().SetPosition(1, pos);
+            }
         }
+    }
+
+
+    //################ PUBLIC METHODS ################
+    public void GameOver() {
+        gameOver = true;
+        menu.SetActive(true);
     }
 
 
