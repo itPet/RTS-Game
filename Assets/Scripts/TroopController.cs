@@ -41,8 +41,8 @@ public class TroopController : MonoBehaviour {
     //################ STARTER METHODS ################
     void Start() { //Set variables
         target = transform.parent == null ? transform.position : transform.parent.position;
-        enemyTag = tag == "Enemy" ? "Troop" : "Enemy"; //If you are an enemy, your enemy is Troop.
-        enemyTowerTag = tag == "Enemy" ? "Tower" : "EnemyTower";
+        enemyTag = tag == "AITroop" ? "PlayerTroop" : "AITroop"; //If you are an enemy, your enemy is Troop.
+        enemyTowerTag = tag == "AITroop" ? "PlayerTower" : "AITower";
         anim = GetComponent<Animator>();
     }
 
@@ -70,7 +70,6 @@ public class TroopController : MonoBehaviour {
                     if (transform.parent == null && homeBuildSite != null) {
                         ReachedBuildSite();
                     }
-
                     BeginIdle();
                 }
             } else { //If far from target and not attack
@@ -88,18 +87,12 @@ public class TroopController : MonoBehaviour {
         }
     }
 
-    private void OnTriggerStay2D(Collider2D collision) {
+    private void OnTriggerStay2D(Collider2D collision) { //Collided with EnemyTower
         if (status != TroopStatus.Attack && collision.transform.tag == enemyTowerTag) {
             enemyTower = collision.transform.GetComponent<TowerController>(); //Set enemy tower
             StartCoroutine(Attack());
         }
     }
-
-    //private void OnTriggerEnter2D(Collider2D collision) { //Enter BuildSite
-    //    if (collision.transform.tag == "BuildSite" && collision.transform == homeBuildSite) {
-    //        ReachedBuildSite(collision.GetComponent<BuildSiteController>());
-    //    } 
-    //}
 
 
     //################ HELPER METHODS 1 ################
@@ -154,14 +147,6 @@ public class TroopController : MonoBehaviour {
 
         EndAttack();
     }
-
-    //void SetEnemyTarget(Collision2D collision) {
-    //    enemy = collision.transform.GetComponent<TroopController>();
-    //    oldTarget = target;
-    //    Transform atkPos = GetNearestAtkPosFrom(enemy.transform);
-    //    atkPos.GetComponent<SpriteRenderer>().color = Color.red;
-    //    target = atkPos.position;
-    //}
 
     void EndAttack() {
         status = TroopStatus.Nothing;

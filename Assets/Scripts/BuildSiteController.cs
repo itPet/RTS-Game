@@ -12,63 +12,84 @@ public class BuildSiteController : MonoBehaviour {
         Full
     }
 
+    public Ownership ownershipStatus;
+    public enum Ownership {
+        Player,
+        AI,
+        Neutral
+    }
+
 
     //################ STARTER METHODS ################
     private void Start() {
-        status = transform.Find("Castle") || transform.Find("EnemyCastle") ? TowerStatus.Full : TowerStatus.Empty; //If castle, site is full
+        status = transform.Find("PlayerCastle") || transform.Find("AICastle") ? TowerStatus.Full : TowerStatus.Empty; //If castle, site is full
 
     }
 
     //################ UPDATE METHODS ################
-    //If enemies are on site, move all troops to the middle and then back again.
+
     private void Update() {
-        string troopTag = "Empty";
-        foreach (Transform pos in GetSpawnPositions()) { //Loop through all spawn positions
-            if (pos.childCount == 2) { //If different troops
-                MoveTroops(transform); //Move all to center
-            } else if (pos.childCount == 1) {
-                if (troopTag != "Empty" && troopTag != pos.GetChild(0).tag) {
-                    MoveTroops(transform);
-                } else {
-                    troopTag = pos.GetChild(0).tag;
-                }
-
-            }
-
+        switch (TroopsOnSite()) { //Update ownership status;
+            case "PlayerTroop":
+                ownershipStatus = Ownership.Player;
+                break;
+            case "AITroop":
+                ownershipStatus = Ownership.AI;
+                break;
+            case "unknown":
+                ownershipStatus = Ownership.Neutral;
+                break;
         }
+
+        if (DifferentTroopsOnSite()) { //If enemies are on site, move all troops to the middle and then back again.
+            MoveTroops(transform);
+        } 
     }
 
     //################ HELPER METHODS 1 ################
-
-    //################ PUBLIC METHODS ################
-    public bool TroopsOnSite() {
-        foreach (Transform pos in GetSpawnPositions()) {
-            if (pos.childCount > 0) {
-                if (pos.GetChild(0).tag == "Troop")
+    bool DifferentTroopsOnSite() {
+        string troopTag = "Empty";
+        foreach (Transform pos in GetSpawnPositions()) { //Loop through all spawn positions
+            if (pos.childCount == 2) { //If 2 troops at pos, they are different
+                return true;
+            } else if (pos.childCount == 1) {
+                if (troopTag != "Empty" && troopTag != pos.GetChild(0).tag) {
                     return true;
+                } else {
+                    troopTag = pos.GetChild(0).tag;
+                }
             }
         }
         return false;
     }
 
-    public List<Transform> PaymentTroops() {
+
+
+    //################ PUBLIC METHODS ################
+    public string TroopsOnSite() {
+        string troopTag = "unknown";
+        if (!DifferentTroopsOnSite()) {
+            foreach (Transform pos in GetSpawnPositions()) {
+                if (pos.childCount > 0) {
+                    troopTag = pos.GetChild(0).tag;
+                    break;
+                }
+            }
+        }
+        return troopTag;
+    }
+
+    public List<Transform> GetTroops() {
         List<Transform> troops = new List<Transform>();
         foreach (Transform pos in GetSpawnPositions()) {
-            if (pos.childCount > 0 && pos.GetChild(0).tag == "Troop") {
-                troops.Add(pos.GetChild(0));
-                if (troops.Count > 5) {
-                    return troops;
+            if (pos.childCount > 0) {
+                for (int i = 0; i < pos.childCount; i++) {
+                    troops.Add(pos.GetChild(i));
                 }
             }
         }
         return troops;
     }
-
-    //public void ActivateTower(GameObject tower) {
-    //    tower.GetComponent<TowerController>().Activate(GetSpawnPositions()); //Activate tower
-    //    tower.GetComponent<SpriteRenderer>().color = Color.white; //Set tower opaciy to 100%
-    //    tower.layer = 2; //Set layer to Ignore Raycast
-    //}
 
     public void MoveTroops(Transform destination) {
         foreach (Transform pos in GetSpawnPositions()) {

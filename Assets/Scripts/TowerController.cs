@@ -18,7 +18,7 @@ public class TowerController : MonoBehaviour {
     }
 
     private void Start() {
-        health = transform.name == "Castle" || transform.name == "EnemyCastle" ? 50 : 20; //More health if castle
+        health = transform.name == "PlayerCastle" || transform.name == "AICastle" ? 50 : 20; //More health if castle
         StartCoroutine(SpawnTroops(transform.parent.GetComponent<BuildSiteController>().GetSpawnPositions()));
     }
 
@@ -26,7 +26,7 @@ public class TowerController : MonoBehaviour {
     // ################ UDATE METHODS ################
     private void Update() {
         if (health < 1) {
-            if (transform.name == "Castle" || transform.name == "EnemyCastle") {
+            if (transform.name == "PlayerCastle" || transform.name == "AICastle") {
                 GameManager.instance.GameOver();
             }
             transform.parent.GetComponent<BuildSiteController>().status = BuildSiteController.TowerStatus.Empty;

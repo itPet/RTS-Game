@@ -15,11 +15,12 @@ public class Menu : MonoBehaviour {
 		
 	}
 
-    public void MyButtons() {
-        SceneManager.LoadScene("MainScene");
+    public void GoToLevel1() {
+        SceneManager.LoadScene("Level1");
     }
 
     public void GoToMainMenu() {
-        SceneManager.LoadScene("GameMenu");
+        SceneManager.LoadScene("MainMenu");
+        GameManager.instance.gameOver = false;
     }
 }

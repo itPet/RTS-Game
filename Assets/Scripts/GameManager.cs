@@ -11,15 +11,16 @@ public class GameManager : MonoBehaviour {
     [SerializeField] GameObject line;
     [SerializeField] GameObject towerPicture;
     [SerializeField] GameObject menu;
+    [Range(1, 12)] public int towerCost;
+    public bool gameOver = false;
 
     GameObject newLine;
     GameObject newTower;
     GameObject newTowerPicture;
 
     BuildSiteController potentialMove;
-    BuildSiteController pendingTower;
+    BuildSiteController pendingTowerOnSite;
 
-    bool gameOver = false;
 
     // ################ STARTER METHODS ################
     void Awake() {
@@ -45,7 +46,7 @@ public class GameManager : MonoBehaviour {
     void Update() {
         if (!gameOver) {
             //---- PENDING AND MOUSE DOWN ----
-            if ((potentialMove || pendingTower) && Input.GetMouseButtonDown(0)) {
+            if ((potentialMove || pendingTowerOnSite) && Input.GetMouseButtonDown(0)) {
                 Transform clickedObject = MouseHit().transform;
                 if (potentialMove) {
                     if (MouseDownOn("BuildSite")) {
@@ -59,8 +60,8 @@ public class GameManager : MonoBehaviour {
                     }
                 }
 
-                if (pendingTower) {
-                    if (MouseDownOn("Tower") && ParentSiteCtrl(clickedObject) == pendingTower)
+                if (pendingTowerOnSite) {
+                    if (MouseDownOn("PlayerTower") && ParentSiteCtrl(clickedObject) == pendingTowerOnSite)
                         PendingTowerSuccess();
                     else
                         PendingTowerFail();
@@ -68,7 +69,7 @@ public class GameManager : MonoBehaviour {
             }
 
             //---- PENDING AND MOUSE UP ----
-            else if ((potentialMove || pendingTower) && Input.GetMouseButtonUp(0)) {
+            else if ((potentialMove || pendingTowerOnSite) && Input.GetMouseButtonUp(0)) {
                 Transform upedObject = MouseHit().transform;
                 if (potentialMove) {
                     if (MouseUpOn("BuildSite") && upedObject != potentialMove.transform) //If upedObject != potentialMove
@@ -77,10 +78,10 @@ public class GameManager : MonoBehaviour {
                         MoveFailed();
                 }
 
-                if (pendingTower) {
-                    if (MouseUpOn("Tower") && ParentSiteCtrl(upedObject) == pendingTower)
+                if (pendingTowerOnSite) {
+                    if (MouseUpOn("PlayerTower") && ParentSiteCtrl(upedObject) == pendingTowerOnSite)
                         PendingTowerSuccess();
-                    else if (MouseUpOnNothing() || ParentSiteCtrl(upedObject) != pendingTower)
+                    else if (MouseUpOnNothing() || ParentSiteCtrl(upedObject) != pendingTowerOnSite)
                         PendingTowerFail();
                 }
             }
@@ -88,12 +89,12 @@ public class GameManager : MonoBehaviour {
             //---- BUILD SITE CLICKED ---- 
             else if (MouseDownOn("BuildSite")) {
                 BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
-                if (clickedSite.TroopsOnSite()) { //If friendly troops on site
+                if (clickedSite.TroopsOnSite() == "PlayerTroop" || clickedSite.TroopsOnSite() == "AITroop") { //If friendly troops on site
                     PotentialMoveFrom(clickedSite);
                 }
 
                 if (clickedSite.status == BuildSiteController.TowerStatus.Empty) { //If site empty
-                    if (clickedSite.PaymentTroops().Count > 5) { //If site has at least 6 friendly troops
+                    if (clickedSite.GetTroops().Count > (towerCost - 1) && clickedSite.TroopsOnSite() == "PlayerTroop") { //If site has at least 6 friendly troops
                         PendingTowerAt(clickedSite);
                     }
                 }
@@ -128,7 +129,7 @@ public class GameManager : MonoBehaviour {
         newTowerPicture.transform.position = site.transform.position + new Vector3(1.5f, 0, 0);
         site.status = BuildSiteController.TowerStatus.Pending; //site to pending
         site.GetComponent<SpriteRenderer>().enabled = true; //Highlight site
-        pendingTower = site;
+        pendingTowerOnSite = site;
     }
 
     void CreateTower(Transform onSite) {
@@ -151,23 +152,24 @@ public class GameManager : MonoBehaviour {
 
     //---- SUCCESS/FAIL METHODS ----
     void PendingTowerSuccess() {
-        List<Transform> paymentTroops = pendingTower.PaymentTroops();
-        foreach (Transform troop in paymentTroops) {
-            Destroy(troop.gameObject);
+        List<Transform> paymentTroops = pendingTowerOnSite.GetTroops();
+        for (int i = 0; i < towerCost; i++) {
+            print(i);
+            Destroy(paymentTroops[i].gameObject);
         }
         //pendingTower.ActivateTower(newTower);
-        CreateTower(pendingTower.transform);
+        CreateTower(pendingTowerOnSite.transform);
         Destroy(newTowerPicture);
-        pendingTower.status = BuildSiteController.TowerStatus.Full; //Status full
-        pendingTower.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
-        pendingTower = null;
+        pendingTowerOnSite.status = BuildSiteController.TowerStatus.Full; //Status full
+        pendingTowerOnSite.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
+        pendingTowerOnSite = null;
         potentialMove = null;
     }
 
     void PendingTowerFail() {
-        pendingTower.status = BuildSiteController.TowerStatus.Empty; //Status empty
-        pendingTower.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
-        pendingTower = null;
+        pendingTowerOnSite.status = BuildSiteController.TowerStatus.Empty; //Status empty
+        pendingTowerOnSite.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
+        pendingTowerOnSite = null;
         Destroy(newTowerPicture);
     }
 

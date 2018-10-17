@@ -4,12 +4,12 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Tower
   - BuildSite
   - SpawnPosition
-  - Troop
-  - Enemy
-  - EnemyTower
+  - AITower
+  - AITroop
+  - PlayerTroop
+  - PlayerTower
   layers:
   - Default
   - TransparentFX
