@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour {
     }
 
     private void OnLevelWasLoaded(int level) {
-        if (level != 1) { //If not menu
+        if (level != 0) { //If not menu
             StartCoroutine(BackgroundMusic());
             GetComponents<AudioSource>()[4].Stop();
             GetComponents<AudioSource>()[5].Play();
