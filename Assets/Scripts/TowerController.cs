@@ -6,11 +6,14 @@ using UnityEngine.Assertions;
 public class TowerController : MonoBehaviour {
 
     [SerializeField] GameObject troop;
-    [SerializeField] float spawnDelay;
+    [SerializeField] [Range(0, 5)] int spawnDelay;
+    [SerializeField] UnityEngine.UI.Slider healthBar;
+
 
     GameObject newTroop;
+    bool checkHealth = true;
 
-    public int health;
+    [Range(10, 50)] public int health;
 
     // ################ STARTER METHODS ################
     void Awake() {
@@ -18,21 +21,24 @@ public class TowerController : MonoBehaviour {
     }
 
     private void Start() {
-        health = transform.name == "PlayerCastle" || transform.name == "AICastle" ? 50 : 20; //More health if castle
-        StartCoroutine(SpawnTroops(transform.parent.GetComponent<BuildSiteController>().GetSpawnPositions()));
+        healthBar.minValue = 0;
+        healthBar.maxValue = health;
+        StartCoroutine(SpawnTroops(transform.parent.parent.GetComponent<BuildSiteController>().GetSpawnPositions()));
     }
 
 
     // ################ UDATE METHODS ################
     private void Update() {
-        if (health < 1) {
-            if (transform.name == "PlayerCastle" || transform.name == "AICastle") {
+        healthBar.value = health;
+        if (health < 1 && checkHealth) {
+            checkHealth = false;
+            GetComponent<AudioSource>().Play();
+            if (transform.name == "PlayerCastle") {
                 GameManager.instance.GameOver();
+            } else if (transform.name == "AICastle") {
+                GameManager.instance.Victory();
             }
-            transform.parent.GetComponent<BuildSiteController>().status = BuildSiteController.TowerStatus.Empty;
-            
             Destroy(gameObject);
-
         }
     }
 

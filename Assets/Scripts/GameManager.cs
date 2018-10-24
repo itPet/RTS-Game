@@ -7,15 +7,15 @@ public class GameManager : MonoBehaviour {
 
     public static GameManager instance = null;
 
-    [SerializeField] GameObject tower;
     [SerializeField] GameObject line;
     [SerializeField] GameObject towerPicture;
-    [SerializeField] GameObject menu;
+    [SerializeField] GameObject gameOverCanvas;
+    [SerializeField] GameObject victoryCanvas;
+    [SerializeField] GameObject concedeCanvas;
     [Range(1, 12)] public int towerCost;
     public bool gameOver = false;
 
     GameObject newLine;
-    GameObject newTower;
     GameObject newTowerPicture;
 
     BuildSiteController potentialMove;
@@ -32,15 +32,24 @@ public class GameManager : MonoBehaviour {
 
         DontDestroyOnLoad(gameObject);
 
-        Assert.IsNotNull(tower);
         Assert.IsNotNull(line);
         Assert.IsNotNull(towerPicture);
-        Assert.IsNotNull(menu);
+        Assert.IsNotNull(gameOverCanvas);
     }
 
     void Start() {
-        
     }
+
+    private void OnLevelWasLoaded(int level) {
+        if (level != 1) { //If not menu
+            StartCoroutine(BackgroundMusic());
+            GetComponents<AudioSource>()[4].Stop();
+            GetComponents<AudioSource>()[5].Play();
+        } else { //If menu
+            GetComponents<AudioSource>()[4].Play();
+        }
+    }
+
 
     // ################ UPDATE METHODS ################
     void Update() {
@@ -89,13 +98,15 @@ public class GameManager : MonoBehaviour {
             //---- BUILD SITE CLICKED ---- 
             else if (MouseDownOn("BuildSite")) {
                 BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
-                if (clickedSite.TroopsOnSite() == "PlayerTroop" || clickedSite.TroopsOnSite() == "AITroop") { //If friendly troops on site
+                if (clickedSite.GetOwner() == BuildSiteController.Owner.Player || clickedSite.GetOwner() == BuildSiteController.Owner.AI) { //If friendly troops on site
                     PotentialMoveFrom(clickedSite);
+                    GetComponent<AudioSource>().Play();
                 }
 
-                if (clickedSite.status == BuildSiteController.TowerStatus.Empty) { //If site empty
-                    if (clickedSite.GetTroops().Count > (towerCost - 1) && clickedSite.TroopsOnSite() == "PlayerTroop") { //If site has at least 6 friendly troops
+                if (clickedSite.CanBuild()) { //If site empty
+                    if (clickedSite.GetTroops().Count > (towerCost - 1) && clickedSite.GetOwner() == BuildSiteController.Owner.Player) { //If site has at least 6 friendly troops
                         PendingTowerAt(clickedSite);
+                        GetComponent<AudioSource>().Play();
                     }
                 }
             }
@@ -117,26 +128,40 @@ public class GameManager : MonoBehaviour {
 
     //################ PUBLIC METHODS ################
     public void GameOver() {
+        GetComponents<AudioSource>()[1].Stop(); //Level music
+        GetComponents<AudioSource>()[3].Play(); //GameOver sound
         gameOver = true;
-        menu.SetActive(true);
+        Instantiate(gameOverCanvas);
+        Time.timeScale = 0;
+    }
+
+    public void Victory() {
+        GetComponents<AudioSource>()[1].Stop(); //Level music
+        GetComponents<AudioSource>()[6].Play(); //Winning sound
+        gameOver = true;
+        Instantiate(victoryCanvas);
+        Time.timeScale = 0;
+    }
+
+    public void SetTimeScale(int i) {
+        Time.timeScale = i;
     }
 
 
     //################ HELPER METHODS 1 ################
+    IEnumerator BackgroundMusic() {
+        GetComponents<AudioSource>()[2].Play();
+        yield return new WaitForSeconds(2.5f);
+        GetComponents<AudioSource>()[1].Play();
+        Instantiate(concedeCanvas);
+    }
+
     void PendingTowerAt(BuildSiteController site) {
         newTowerPicture = Instantiate(towerPicture); //Create tower
         newTowerPicture.transform.SetParent(site.transform); //Set parent
         newTowerPicture.transform.position = site.transform.position + new Vector3(1.5f, 0, 0);
-        site.status = BuildSiteController.TowerStatus.Pending; //site to pending
         site.GetComponent<SpriteRenderer>().enabled = true; //Highlight site
         pendingTowerOnSite = site;
-    }
-
-    void CreateTower(Transform onSite) {
-        newTower = Instantiate(tower); 
-        newTower.transform.SetParent(onSite); //Set tower parent
-        newTower.transform.position = onSite.position; //Set tower position
-        //newTower.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0.5f); //Set opacity to 50%
     }
 
     void PotentialMoveFrom(BuildSiteController buildSite) {
@@ -154,20 +179,16 @@ public class GameManager : MonoBehaviour {
     void PendingTowerSuccess() {
         List<Transform> paymentTroops = pendingTowerOnSite.GetTroops();
         for (int i = 0; i < towerCost; i++) {
-            print(i);
             Destroy(paymentTroops[i].gameObject);
         }
-        //pendingTower.ActivateTower(newTower);
-        CreateTower(pendingTowerOnSite.transform);
+        pendingTowerOnSite.CreateTower();
         Destroy(newTowerPicture);
-        pendingTowerOnSite.status = BuildSiteController.TowerStatus.Full; //Status full
         pendingTowerOnSite.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
         pendingTowerOnSite = null;
         potentialMove = null;
     }
 
     void PendingTowerFail() {
-        pendingTowerOnSite.status = BuildSiteController.TowerStatus.Empty; //Status empty
         pendingTowerOnSite.GetComponent<SpriteRenderer>().enabled = false; //Un hightlight
         pendingTowerOnSite = null;
         Destroy(newTowerPicture);

@@ -4,15 +4,18 @@ using UnityEngine;
 
 public class TroopController : MonoBehaviour {
 
-    [SerializeField] float speed;
-    [SerializeField] float ghostDuration;
-    [SerializeField] float durationToGhost;
-    [SerializeField] float portionOfSpeedToGhost;
-    [SerializeField] float SiteEnterExitWaitTime;
+    [SerializeField] [Range(2, 4)] int speed;
+    [Range(1, 5)] public int health = 3;
+    [SerializeField] [Range(0.5f, 1.5f)] float ghostDuration;
 
+    float durationToGhost = 1f;
     float distanceToTarget = 0.1f;
     bool canStartStuckCheck = true;
     bool move = true;
+    bool canHitWall1 = true;
+    bool canHitWall2 = true;
+    bool obstacleMove = false;
+    Vector2 obstaclePos;
     bool dead = false;
     int walkHash = Animator.StringToHash("Walk");
     int attackHash = Animator.StringToHash("Attack");
@@ -29,7 +32,7 @@ public class TroopController : MonoBehaviour {
     Animator anim;
     Vector2 atkPos;
 
-    public int health = 3;
+
     public TroopStatus status = TroopStatus.Nothing;
     public enum TroopStatus {
         Nothing,
@@ -59,7 +62,7 @@ public class TroopController : MonoBehaviour {
 
     private void FixedUpdate() {
         if (!dead) {
-            MoveToTarget();
+            Move();
 
             if (status == TroopStatus.Attack) {
                 transform.position = atkPos;
@@ -76,14 +79,26 @@ public class TroopController : MonoBehaviour {
                 if (status != TroopStatus.Walk && status != TroopStatus.Attack)
                     BeginWalk();
             }
+
+            if (obstaclePos != null && Vector2.Distance(transform.position, obstaclePos) < distanceToTarget) { //If close to obstaclePos
+                obstacleMove = false;
+            }
         }
     }
 
     //---- TRIGGER METHODS ----
-    private void OnCollisionStay2D(Collision2D collision) { //Collided with Enemy
-        if (status != TroopStatus.Attack && collision.transform.tag == enemyTag) {
+    private void OnCollisionStay2D(Collision2D collision) {
+        if (status != TroopStatus.Attack && collision.transform.tag == enemyTag) { //Collided with Enemy
             enemy = collision.transform.GetComponent<TroopController>(); //Set enemy
             StartCoroutine(Attack());
+        } else if (collision.transform.tag == "Wall1" && canHitWall1) { //Collided with wall1
+            obstaclePos = collision.transform.Find("Pos").position;
+            obstacleMove = true;
+            canHitWall1 = false;
+        } else if (collision.transform.tag == "Wall2" && canHitWall2) { //Collided with wall2
+            obstaclePos = collision.transform.Find("Pos").position;
+            obstacleMove = true;
+            canHitWall2 = false;
         }
     }
 
@@ -96,25 +111,28 @@ public class TroopController : MonoBehaviour {
 
 
     //################ HELPER METHODS 1 ################
-    void MoveToTarget() {
+    void Move() {
         if (move) {
-            transform.position = Vector3.MoveTowards(transform.position, target, speed); //Every time, move "speed units" closer to target
-            GetComponent<SpriteRenderer>().flipX = target.x < transform.position.x ? true : false; //Sprite looks left or right
+            Vector2 destination = new Vector2();
+            destination = obstacleMove ? obstaclePos : target; //Move to obstaclePos or target
+            transform.position = Vector3.MoveTowards(transform.position, destination, (float)(speed) / 100); //Every time, move "speed units" closer to target
+            GetComponent<SpriteRenderer>().flipX = destination.x < transform.position.x ? true : false; //Sprite looks left or right
         }
+
     }
 
     void Die() {
-        print(tag + " died");
-
+        GetComponent<AudioSource>().Play();
         dead = true;
         EndAttack();
         anim.Play(dieHash);
-        GetComponent<BoxCollider2D>().enabled = false;
+        GetComponent<CapsuleCollider2D>().enabled = false;
         GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
         Destroy(gameObject, 4);
     }
 
     void BeginWalk() {
+        transform.localScale = Vector2.one; //Make big
         status = TroopStatus.Walk;
         anim.Play(walkHash);
         if (canStartStuckCheck)
@@ -122,25 +140,35 @@ public class TroopController : MonoBehaviour {
     }
 
     void BeginIdle() {
+        transform.localScale = new Vector2(0.7f, 0.7f); //Make small
         status = TroopStatus.Idle;
         anim.Play(idleHash);
     }
 
     IEnumerator Attack() {
+        transform.localScale = Vector2.one; //Make big
         move = false;
         status = TroopStatus.Attack;
         atkPos = transform.position;
         anim.Play(attackHash);
+
         if (enemy != null) {
             while (enemy.health > 0 && status == TroopStatus.Attack && enemy) {
                 enemy.health--;
-                yield return new WaitForSeconds(1);
-            }
-        }
+                GetComponents<AudioSource>()[1].Play();
+                yield return new WaitForSeconds(0.5f);
+                GetComponents<AudioSource>()[2].Play();
+                yield return new WaitForSeconds(0.5f);
 
-        if (enemyTower != null) {
+            }
+        } else if (enemyTower != null) {
             while (enemyTower.health > 0 && status == TroopStatus.Attack && enemyTower) {
                 enemyTower.health--;
+                List<Transform> troopsAtCite = enemyTower.GetComponentsInParent<BuildSiteController>()[0].GetTroops();
+                foreach (Transform troop in troopsAtCite) {
+                    troop.GetComponent<TroopController>().MakeObstacleMove(transform.position);
+                }
+                GetComponents<AudioSource>()[1].Play();
                 yield return new WaitForSeconds(1);
             }
         }
@@ -154,7 +182,6 @@ public class TroopController : MonoBehaviour {
     }
 
     void ReachedBuildSite() {
-        transform.localScale = new Vector2(0.7f, 0.7f); //Make small
         foreach (Transform pos in homeBuildSite.GetComponent<BuildSiteController>().GetSpawnPositions()) {
             if (pos.childCount == 0 || (pos.GetChild(0).tag == enemyTag && pos.childCount < 2)) {
                 transform.SetParent(pos); //Set parent
@@ -171,10 +198,9 @@ public class TroopController : MonoBehaviour {
 
     //################ HELPER METHODS 2 ################
     IEnumerator StuckCheck() {
-        print(tag + " StuckCheck");
         canStartStuckCheck = false;
         while (status == TroopStatus.Walk) {
-            float toSlow = MaxDistance(durationToGhost) * portionOfSpeedToGhost; //Set "speed" that is to slow
+            float toSlow = 0.3f; //Set "speed" that is to slow
             Vector2 startPos = transform.position;
             yield return new WaitForSeconds(durationToGhost);
             Vector2 currentPos = transform.position;
@@ -187,16 +213,10 @@ public class TroopController : MonoBehaviour {
 
 
     //################ HELPER METHODS 3 ################
-    float MaxDistance(float seconds) {
-        float timesMoved = seconds / 0.02f; //FixedUpdate gets called every 0.02 second.
-        return speed * timesMoved;
-    }
-
     IEnumerator BecomeGhost() {
-        print(tag + " became ghost");
-        GetComponent<BoxCollider2D>().isTrigger = true;
+        GetComponent<CapsuleCollider2D>().isTrigger = true;
         yield return new WaitForSeconds(ghostDuration);
-        GetComponent<BoxCollider2D>().isTrigger = false;
+        GetComponent<CapsuleCollider2D>().isTrigger = false;
     }
 
 
@@ -207,5 +227,16 @@ public class TroopController : MonoBehaviour {
 
     public Transform HomeBuildSite {
         set { homeBuildSite = value; }
+    }
+
+    public void ResetCanHitObstacle () {
+        canHitWall1 = true;
+        canHitWall2 = true;
+        obstacleMove = false;
+    }
+
+    public void MakeObstacleMove(Vector2 pos) {
+        obstacleMove = true;
+        obstaclePos = pos;
     }
 }

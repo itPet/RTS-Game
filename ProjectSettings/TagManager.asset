@@ -10,6 +10,8 @@ TagManager:
   - AITroop
   - PlayerTroop
   - PlayerTower
+  - Wall1
+  - Wall2
   layers:
   - Default
   - TransparentFX

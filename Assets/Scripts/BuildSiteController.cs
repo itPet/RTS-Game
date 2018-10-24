@@ -5,46 +5,37 @@ using UnityEngine.Assertions;
 
 public class BuildSiteController : MonoBehaviour {
 
-    public TowerStatus status;
-    public enum TowerStatus {
-        Empty,
-        Pending,
-        Full
-    }
+    [SerializeField] GameObject playerTower;
+    [SerializeField] GameObject AITower;
 
-    public Ownership ownershipStatus;
-    public enum Ownership {
-        Player,
+    GameObject newTower;
+
+    public enum Owner {
+        Neutral,
         AI,
-        Neutral
+        Player
     }
 
 
     //################ STARTER METHODS ################
     private void Start() {
-        status = transform.Find("PlayerCastle") || transform.Find("AICastle") ? TowerStatus.Full : TowerStatus.Empty; //If castle, site is full
 
     }
 
     //################ UPDATE METHODS ################
 
     private void Update() {
-        switch (TroopsOnSite()) { //Update ownership status;
-            case "PlayerTroop":
-                ownershipStatus = Ownership.Player;
-                break;
-            case "AITroop":
-                ownershipStatus = Ownership.AI;
-                break;
-            case "unknown":
-                ownershipStatus = Ownership.Neutral;
-                break;
-        }
-
-        if (DifferentTroopsOnSite()) { //If enemies are on site, move all troops to the middle and then back again.
+        if (DifferentTroopsOnSite()) { //If enemies on site, move to center and back again
             MoveTroops(transform);
         } 
     }
+
+    //private void OnTriggerStay2D(Collider2D collision) { //When enemies enter, move to center and back again.
+    //    Owner invadingTroop = collision.tag == "PlayerTroop" ? Owner.Player : Owner.AI;
+    //    if (GetOwner() != invadingTroop) {
+    //        MoveTroops(transform);
+    //    }
+    //}
 
     //################ HELPER METHODS 1 ################
     bool DifferentTroopsOnSite() {
@@ -64,19 +55,33 @@ public class BuildSiteController : MonoBehaviour {
     }
 
 
-
     //################ PUBLIC METHODS ################
-    public string TroopsOnSite() {
-        string troopTag = "unknown";
+    public void CreateTower() {
+        GetComponent<AudioSource>().Play();
+        if (GetOwner() == Owner.AI) {
+            newTower = Instantiate(AITower);
+        } else if (GetOwner() == Owner.Player) {
+            newTower = Instantiate(playerTower);
+        }
+        newTower.transform.SetParent(transform.Find("Building")); //Set parent
+        newTower.transform.position = transform.position; //Set position
+    }
+
+    public bool CanBuild() {
+        return transform.Find("Building").childCount == 0;
+    }
+
+    public Owner GetOwner() {
+        Owner owner = Owner.Neutral;
         if (!DifferentTroopsOnSite()) {
             foreach (Transform pos in GetSpawnPositions()) {
                 if (pos.childCount > 0) {
-                    troopTag = pos.GetChild(0).tag;
+                    owner = pos.GetChild(0).tag == "AITroop" ? Owner.AI : Owner.Player;
                     break;
                 }
             }
         }
-        return troopTag;
+        return owner;
     }
 
     public List<Transform> GetTroops() {
@@ -95,9 +100,10 @@ public class BuildSiteController : MonoBehaviour {
         foreach (Transform pos in GetSpawnPositions()) {
             if (pos.childCount > 0) { //If pos has troop
                 for (int i = 0; i < pos.childCount; i++) {
-                    pos.GetChild(i).GetComponent<TroopController>().Target = destination.position; //Set new destination for troop
-                    pos.GetChild(i).GetComponent<TroopController>().HomeBuildSite = destination; //Set homeBuildSite
-                    pos.GetChild(i).transform.localScale = Vector2.one; //Make big
+                    TroopController troop = pos.GetChild(i).GetComponent<TroopController>();
+                    troop.Target = destination.position; //Set new destination for troop
+                    troop.HomeBuildSite = destination; //Set homeBuildSite
+                    troop.ResetCanHitObstacle();
                 }
                 pos.DetachChildren();
             }
