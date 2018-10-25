@@ -36,6 +36,18 @@ public class Menu : MonoBehaviour {
         SceneManager.LoadScene("Level3");
     }
 
+    public void GoToLevel4() {
+        SceneManager.LoadScene("Level4");
+    }
+
+    public void GoToLevel5() {
+        SceneManager.LoadScene("Level5");
+    }
+
+    public void GoToLevel6() {
+        SceneManager.LoadScene("Level6");
+    }
+
     public void GoToMainMenu() {
         SceneManager.LoadScene("MainMenu");
         GameManager.instance.gameOver = false;

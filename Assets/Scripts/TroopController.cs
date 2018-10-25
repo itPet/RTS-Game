@@ -8,14 +8,16 @@ public class TroopController : MonoBehaviour {
     [Range(1, 5)] public int health = 3;
     [SerializeField] [Range(0.5f, 1.5f)] float ghostDuration;
 
-    float durationToGhost = 1f;
+    float durationToGhost = 0.8f;
     float distanceToTarget = 0.1f;
     bool canStartStuckCheck = true;
     bool move = true;
     bool canHitWall1 = true;
     bool canHitWall2 = true;
-    bool obstacleMove = false;
-    Vector2 obstaclePos;
+    bool obstacleMove1 = false;
+    bool obstacleMove2 = false;
+    Vector2 obstaclePos1;
+    Vector2 obstaclePos2;
     bool dead = false;
     int walkHash = Animator.StringToHash("Walk");
     int attackHash = Animator.StringToHash("Attack");
@@ -80,8 +82,13 @@ public class TroopController : MonoBehaviour {
                     BeginWalk();
             }
 
-            if (obstaclePos != null && Vector2.Distance(transform.position, obstaclePos) < distanceToTarget) { //If close to obstaclePos
-                obstacleMove = false;
+            if (Vector2.Distance(transform.position, obstaclePos1) < distanceToTarget) { //Close to obstaclePos1
+                obstacleMove1 = false;
+                //canHitWall1 = true;
+            }
+            if (Vector2.Distance(transform.position, obstaclePos2) < distanceToTarget) { //lose to obstaclePos2
+                obstacleMove2 = false;
+                //canHitWall2 = true;
             }
         }
     }
@@ -92,12 +99,12 @@ public class TroopController : MonoBehaviour {
             enemy = collision.transform.GetComponent<TroopController>(); //Set enemy
             StartCoroutine(Attack());
         } else if (collision.transform.tag == "Wall1" && canHitWall1) { //Collided with wall1
-            obstaclePos = collision.transform.Find("Pos").position;
-            obstacleMove = true;
+            obstaclePos1 = collision.transform.Find("Pos").position;
+            obstacleMove1 = true;
             canHitWall1 = false;
         } else if (collision.transform.tag == "Wall2" && canHitWall2) { //Collided with wall2
-            obstaclePos = collision.transform.Find("Pos").position;
-            obstacleMove = true;
+            obstaclePos2 = collision.transform.Find("Pos").position;
+            obstacleMove2 = true;
             canHitWall2 = false;
         }
     }
@@ -114,7 +121,13 @@ public class TroopController : MonoBehaviour {
     void Move() {
         if (move) {
             Vector2 destination = new Vector2();
-            destination = obstacleMove ? obstaclePos : target; //Move to obstaclePos or target
+            destination = target;
+            if (obstacleMove1) {
+                destination = obstaclePos1;
+            }
+            if (obstacleMove2) {
+                destination = obstaclePos2;
+            }
             transform.position = Vector3.MoveTowards(transform.position, destination, (float)(speed) / 100); //Every time, move "speed units" closer to target
             GetComponent<SpriteRenderer>().flipX = destination.x < transform.position.x ? true : false; //Sprite looks left or right
         }
@@ -232,11 +245,12 @@ public class TroopController : MonoBehaviour {
     public void ResetCanHitObstacle () {
         canHitWall1 = true;
         canHitWall2 = true;
-        obstacleMove = false;
+        obstacleMove1 = false;
+        obstacleMove2 = false;
     }
 
     public void MakeObstacleMove(Vector2 pos) {
-        obstacleMove = true;
-        obstaclePos = pos;
+        obstacleMove1 = true;
+        obstaclePos1 = pos;
     }
 }

@@ -58,6 +58,14 @@ public class GameManager : MonoBehaviour {
     // ################ UPDATE METHODS ################
     void Update() {
         if (!gameOver) {
+            //---- PENDING MOVE becomes PENDING TOWER
+            if (potentialMove && potentialMove.tag == "BuildSite" && !pendingTowerOnSite) {
+                BuildSiteController site = potentialMove.GetComponent<BuildSiteController>();
+                if (site.CanBuild() && site.GetOwner() == BuildSiteController.Owner.Player && site.GetTroops().Count >= towerCost) {
+                    PendingTowerAt(site);
+                }
+            }
+
             //---- PENDING AND MOUSE DOWN ----
             if ((potentialMove || pendingTowerOnSite) && Input.GetMouseButtonDown(0)) {
                 Transform clickedObject = MouseHit().transform;
@@ -108,7 +116,7 @@ public class GameManager : MonoBehaviour {
                 }
 
                 if (clickedSite.CanBuild()) { //If site empty
-                    if (clickedSite.GetTroops().Count > (towerCost - 1) && clickedSite.GetOwner() == BuildSiteController.Owner.Player) { //If site has at least 6 friendly troops
+                    if (clickedSite.GetTroops().Count >= towerCost && clickedSite.GetOwner() == BuildSiteController.Owner.Player) {
                         PendingTowerAt(clickedSite);
                         GetComponent<AudioSource>().Play();
                     }

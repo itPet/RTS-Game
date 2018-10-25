@@ -66,13 +66,16 @@ public class BuildSiteController : MonoBehaviour {
 
     public Owner GetOwner() {
         Owner owner = Owner.Neutral;
-        if (!DifferentTroopsOnSite()) {
+        if (transform.Find("Building").transform.childCount > 0) {
+            owner = transform.Find("Building").GetChild(0).tag == "AITower" ? Owner.AI : Owner.Player;
+        } else if (!DifferentTroopsOnSite()) {
             foreach (Transform pos in GetSpawnPositions()) {
                 if (pos.childCount > 0) {
                     owner = pos.GetChild(0).tag == "AITroop" ? Owner.AI : Owner.Player;
                     break;
                 }
             }
+
         }
         return owner;
     }
