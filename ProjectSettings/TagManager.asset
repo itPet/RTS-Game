@@ -12,6 +12,8 @@ TagManager:
   - PlayerTower
   - Wall1
   - Wall2
+  - MoveAll
+  - AIBrain
   layers:
   - Default
   - TransparentFX
@@ -39,7 +41,7 @@ TagManager:
   - 
   - 
   - BuildSite
-  - 
+  - Test
   - 
   - 
   - 
@@ -49,14 +51,14 @@ TagManager:
   - name: Background
     uniqueID: 2463453071
     locked: 0
-  - name: Default
-    uniqueID: 0
-    locked: 0
   - name: Items
     uniqueID: 2225518169
     locked: 0
   - name: Troops
     uniqueID: 2627313883
+    locked: 0
+  - name: Default
+    uniqueID: 0
     locked: 0
   - name: Lines
     uniqueID: 4027039297

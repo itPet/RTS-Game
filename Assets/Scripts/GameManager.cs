@@ -17,8 +17,10 @@ public class GameManager : MonoBehaviour {
 
     GameObject newLine;
     GameObject newTowerPicture;
+    AI aiBrain;
 
-    BuildSiteController potentialMove;
+    Transform potentialMove;
+    List<Transform> allPlayerSites = new List<Transform>();
     BuildSiteController pendingTowerOnSite;
 
 
@@ -38,10 +40,12 @@ public class GameManager : MonoBehaviour {
     }
 
     void Start() {
+
     }
 
     private void OnLevelWasLoaded(int level) {
         if (level != 0) { //If not menu
+            aiBrain = GameObject.FindWithTag("AIBrain").GetComponent<AI>();
             StartCoroutine(BackgroundMusic());
             GetComponents<AudioSource>()[4].Stop();
             GetComponents<AudioSource>()[5].Play();
@@ -62,7 +66,7 @@ public class GameManager : MonoBehaviour {
                         // Get controller
                         BuildSiteController clickedSite = MouseHit().transform
                                                   .GetComponent<BuildSiteController>();
-                        if (clickedSite != potentialMove)
+                        if (clickedSite.transform != potentialMove)
                             MoveSuccess(clickedSite.transform);
                         else
                             MoveFailed();
@@ -81,9 +85,9 @@ public class GameManager : MonoBehaviour {
             else if ((potentialMove || pendingTowerOnSite) && Input.GetMouseButtonUp(0)) {
                 Transform upedObject = MouseHit().transform;
                 if (potentialMove) {
-                    if (MouseUpOn("BuildSite") && upedObject != potentialMove.transform) //If upedObject != potentialMove
+                    if (MouseUpOn("BuildSite") && upedObject != potentialMove) //If upedObject != potentialMove
                         MoveSuccess(MouseHit().transform);
-                    else if (MouseUpOnNothing() || upedObject != potentialMove.transform)
+                    else if (MouseUpOnNothing() || upedObject != potentialMove)
                         MoveFailed();
                 }
 
@@ -98,8 +102,8 @@ public class GameManager : MonoBehaviour {
             //---- BUILD SITE CLICKED ---- 
             else if (MouseDownOn("BuildSite")) {
                 BuildSiteController clickedSite = MouseHit().transform.GetComponent<BuildSiteController>();
-                if (clickedSite.GetOwner() == BuildSiteController.Owner.Player || clickedSite.GetOwner() == BuildSiteController.Owner.AI) { //If friendly troops on site
-                    PotentialMoveFrom(clickedSite);
+                if (clickedSite.GetOwner() == BuildSiteController.Owner.Player) { //If friendly troops on site
+                    PotentialMoveFrom(clickedSite.transform);
                     GetComponent<AudioSource>().Play();
                 }
 
@@ -109,6 +113,12 @@ public class GameManager : MonoBehaviour {
                         GetComponent<AudioSource>().Play();
                     }
                 }
+            }
+
+            //---- MOVE ALL CLICKED ----
+            else if (MouseDownOn("MoveAll") && aiBrain.GetPlayerSites().Count > 0) {
+                PotentialMoveFrom(MouseHit().transform);
+                GetComponent<AudioSource>().Play();
             }
 
             //---- LINE ----
@@ -164,9 +174,18 @@ public class GameManager : MonoBehaviour {
         pendingTowerOnSite = site;
     }
 
-    void PotentialMoveFrom(BuildSiteController buildSite) {
-        buildSite.GetComponent<SpriteRenderer>().enabled = true;
-        potentialMove = buildSite;
+    void PotentialMoveFrom(Transform clickedObject) {
+        if (clickedObject.tag == "MoveAll") {
+            foreach (BuildSiteController site in aiBrain.GetPlayerSites()) {
+                site.transform.GetComponent<SpriteRenderer>().enabled = true;
+                allPlayerSites.Add(site.transform);
+            }
+            clickedObject.GetComponent<SpriteRenderer>().color = Color.green;
+        } else {
+            clickedObject.GetComponent<SpriteRenderer>().enabled = true;
+        }
+
+        potentialMove = clickedObject;
         if (newLine == null)
             CreateLine();
     }
@@ -195,13 +214,34 @@ public class GameManager : MonoBehaviour {
     }
 
     void MoveSuccess(Transform destination) {
-        potentialMove.MoveTroops(destination);
-        potentialMove.GetComponent<SpriteRenderer>().enabled = false;
+        if (potentialMove.tag == "MoveAll") {
+            foreach (Transform site in allPlayerSites) {
+                site.GetComponent<SpriteRenderer>().enabled = false;
+            }
+            foreach (BuildSiteController site in aiBrain.GetPlayerSites()) {
+                site.MoveTroops(destination);
+            }
+            allPlayerSites.Clear();
+            potentialMove.GetComponent<SpriteRenderer>().color = Color.white;
+        } else {
+            potentialMove.GetComponent<BuildSiteController>().MoveTroops(destination);
+            potentialMove.GetComponent<SpriteRenderer>().enabled = false;
+        }
+
         potentialMove = null;
     }
 
     void MoveFailed() {
-        potentialMove.GetComponent<SpriteRenderer>().enabled = false;
+        foreach (Transform site in allPlayerSites) {
+            site.GetComponent<SpriteRenderer>().enabled = false;
+        }
+
+        if (potentialMove.tag == "MoveAll") {
+            potentialMove.GetComponent<SpriteRenderer>().color = Color.white;
+        } else {
+            potentialMove.GetComponent<SpriteRenderer>().enabled = false;
+        }
+
         potentialMove = null;
     }
 

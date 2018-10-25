@@ -4,6 +4,7 @@ TextureImporter:
   fileIDToRecycleName:
     21300000: LevelBackground
     21300002: Button
+    21300004: Swords
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -125,13 +126,33 @@ TextureImporter:
         width: 394
         height: 92
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
       spriteID: 1be9ac20637da4331a0c799cbe839ebd
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Swords
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 266
+        width: 112
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e805fedd174694bccbe11ca3ef1be981
       vertices: []
       indices: 
       edges: []

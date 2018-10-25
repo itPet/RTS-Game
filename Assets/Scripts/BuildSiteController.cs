@@ -30,13 +30,6 @@ public class BuildSiteController : MonoBehaviour {
         } 
     }
 
-    //private void OnTriggerStay2D(Collider2D collision) { //When enemies enter, move to center and back again.
-    //    Owner invadingTroop = collision.tag == "PlayerTroop" ? Owner.Player : Owner.AI;
-    //    if (GetOwner() != invadingTroop) {
-    //        MoveTroops(transform);
-    //    }
-    //}
-
     //################ HELPER METHODS 1 ################
     bool DifferentTroopsOnSite() {
         string troopTag = "Empty";

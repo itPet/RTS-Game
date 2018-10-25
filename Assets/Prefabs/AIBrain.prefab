@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114322382725468210}
   m_Layer: 0
   m_Name: AIBrain
-  m_TagString: Untagged
+  m_TagString: AIBrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -51,7 +51,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e8a986f75344496b55dbc2e33e22d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aiStartBuildSite: {fileID: 0}
-  playerStartBuildSite: {fileID: 0}
-  buildSites: []
-  aiCost: 3
+  aiCost: 5
+  aiMoveCost: 7
+  allSites: []
+  sitesCloseToAI: []
+  aiStartSite: {fileID: 0}
+  moveAllButton: {fileID: 0}
