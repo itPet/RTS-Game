@@ -84,11 +84,9 @@ public class TroopController : MonoBehaviour {
 
             if (Vector2.Distance(transform.position, obstaclePos1) < distanceToTarget) { //Close to obstaclePos1
                 obstacleMove1 = false;
-                //canHitWall1 = true;
             }
             if (Vector2.Distance(transform.position, obstaclePos2) < distanceToTarget) { //lose to obstaclePos2
                 obstacleMove2 = false;
-                //canHitWall2 = true;
             }
         }
     }
@@ -131,7 +129,6 @@ public class TroopController : MonoBehaviour {
             transform.position = Vector3.MoveTowards(transform.position, destination, (float)(speed) / 100); //Every time, move "speed units" closer to target
             GetComponent<SpriteRenderer>().flipX = destination.x < transform.position.x ? true : false; //Sprite looks left or right
         }
-
     }
 
     void Die() {
