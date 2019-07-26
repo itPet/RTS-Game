@@ -1,11 +1,10 @@
 fileFormatVersion: 2
-guid: 7457c4e215a2b43bd8f5302dacd37486
+guid: f871e5e28b741420593555ccdb9633a0
 TextureImporter:
   fileIDToRecycleName:
-    21300000: LevelsWindow
-    21300002: Banner
+    21300000: LevelWindow
   externalObjects: {}
-  serializedVersion: 7
+  serializedVersion: 9
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -82,48 +81,17 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
-  - serializedVersion: 2
-    buildTarget: iPhone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: LevelsWindow
+      name: LevelWindow
       rect:
         serializedVersion: 2
-        x: 1270
-        y: 4280
-        width: 1184
-        height: 867
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: b722cf91c8a6b4bdeafb269e4a34b2bc
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Banner
-      rect:
-        serializedVersion: 2
-        x: 3495
-        y: 7026
-        width: 1009
-        height: 169
+        x: 1271
+        y: 4283
+        width: 1180
+        height: 868
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -131,7 +99,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bca14e050f3704bb5b0c346cc37e336d
+      spriteID: e22cf817bdfee4c768c7cef1cdcc724c
       vertices: []
       indices: 
       edges: []
@@ -139,7 +107,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 39648f4708d384a50a95ba4483513b3c
+    spriteID: 35c6229491e9243578a21adaf6890306
     vertices: []
     indices: 
     edges: []
